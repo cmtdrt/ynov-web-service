@@ -1,0 +1,1399 @@
+{
+  "info": {
+    "name": "TP1 - posts-api",
+    "description": "Requêtes pour tester l'API posts-api. Lancer le serveur (npm start), puis exécuter la collection dans l'ordre (Run collection) : la requête « Créer un post » enregistre l'id créé dans la variable createdId, réutilisée par PUT, PATCH et DELETE. Redémarrer le serveur pour revenir aux dix posts de départ.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "createdId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Lire",
+      "description": "GET /posts, GET /posts/:id et le filtre ?postId=",
+      "item": [
+        {
+          "name": "Liste des posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200))",
+                  "",
+                  "pm.test('Un tableau de posts avec leurs cinq champs', () => {",
+                  "  const posts = pm.response.json()",
+                  "  pm.expect(posts).to.be.an('array').that.is.not.empty",
+                  "  posts.forEach((post) => pm.expect(post).to.have.all.keys('postId', 'id', 'name', 'email', 'body'))",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Un post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200))",
+                  "",
+                  "pm.test('Le post 1', () => pm.expect(pm.response.json().id).to.eql(1))"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Post inexistant",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id absurde (abc)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtre postId=2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?postId=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "postId",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200))",
+                  "",
+                  "pm.test('Uniquement des posts de postId 2', () => {",
+                  "  const posts = pm.response.json()",
+                  "  pm.expect(posts).to.be.an('array').that.is.not.empty",
+                  "  posts.forEach((post) => pm.expect(post.postId).to.eql(2))",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtre invalide (abc)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?postId=abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "postId",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtre invalide (0)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?postId=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "postId",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtre invalide (-1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?postId=-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "postId",
+                  "value": "-1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Créer",
+      "description": "POST /posts : création, en-tête Location et validation",
+      "item": [
+        {
+          "name": "Créer un post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"name\": \"Mon premier post\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 201', () => pm.response.to.have.status(201))",
+                  "",
+                  "pm.test('Le post créé avec un id entier', () => {",
+                  "  const post = pm.response.json()",
+                  "  pm.expect(Number.isInteger(post.id)).to.be.true",
+                  "  pm.expect(post.name).to.eql('Mon premier post')",
+                  "  pm.collectionVariables.set('createdId', post.id)",
+                  "})",
+                  "",
+                  "pm.test('En-tête Location = /posts/<id>', () => {",
+                  "  pm.expect(pm.response.headers.get('Location')).to.eql('/posts/' + pm.response.json().id)",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Champ manquant (name)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Contenu\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mauvais type (postId en texte)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": \"1\",\n  \"name\": \"Mon premier post\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Texte trop long (name > 100)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"name\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E-mail invalide",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"name\": \"Mon premier post\",\n  \"email\": \"pas-un-email\",\n  \"body\": \"Le contenu de mon post.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id envoyé par le client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"name\": \"Mon premier post\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\",\n  \"id\": 500\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Champ inconnu (role)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"name\": \"Mon premier post\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\",\n  \"role\": \"admin\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "JSON cassé",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{cassé"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Remplacer et modifier",
+      "description": "PUT et PATCH sur le post créé (variable createdId)",
+      "item": [
+        {
+          "name": "Remplacer le post (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 2,\n  \"name\": \"Post remplacé\",\n  \"email\": \"grace@exemple.com\",\n  \"body\": \"Nouveau contenu.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200))",
+                  "",
+                  "pm.test('Tous les champs remplacés, id inchangé', () => {",
+                  "  const post = pm.response.json()",
+                  "  pm.expect(post.id).to.eql(Number(pm.collectionVariables.get('createdId')))",
+                  "  pm.expect(post.name).to.eql('Post remplacé')",
+                  "  pm.expect(post.postId).to.eql(2)",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT incomplet (sans email)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 2,\n  \"name\": \"Post remplacé\",\n  \"body\": \"Nouveau contenu.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT sur un id inexistant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "999999"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"name\": \"Mon premier post\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier le nom (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nom modifié\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 200', () => pm.response.to.have.status(200))",
+                  "",
+                  "pm.test('Seul le nom change', () => {",
+                  "  const post = pm.response.json()",
+                  "  pm.expect(post.name).to.eql('Nom modifié')",
+                  "  pm.expect(post.body).to.eql('Nouveau contenu.')",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH vide {}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH avec id",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH avec un champ inconnu",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH sur un id inexistant",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "999999"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"x\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Supprimer",
+      "description": "DELETE sur le post créé, puis vérification",
+      "item": [
+        {
+          "name": "Supprimer le post",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 204', () => pm.response.to.have.status(204))",
+                  "",
+                  "pm.test('Aucun corps', () => pm.expect(pm.response.text()).to.eql(''))"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lire le post supprimé",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer une seconde fois",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{createdId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{createdId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Erreurs propres",
+      "description": "Route inconnue, méthode non autorisée et requêtes hostiles : toujours du JSON, jamais de 5xx",
+      "item": [
+        {
+          "name": "Route inconnue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/nimportequoi",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "nimportequoi"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Méthode non autorisée",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": 1,\n  \"name\": \"Mon premier post\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 405', () => pm.response.to.have.status(405))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})",
+                  "",
+                  "pm.test('En-tête Allow', () => pm.response.to.have.header('Allow'))"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corps null",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "null"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corps tableau []",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[]"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corps simple texte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"texte\""
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Objet à la place d'une valeur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"postId\": {\n    \"$ne\": null\n  },\n  \"name\": \"Mon premier post\",\n  \"email\": \"ada@exemple.com\",\n  \"body\": \"Le contenu de mon post.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 400', () => pm.response.to.have.status(400))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id %00",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts/%00",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "%00"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Statut 404', () => pm.response.to.have.status(404))",
+                  "",
+                  "pm.test('Erreur au format { \"error\": \"…\" }', () => {",
+                  "  pm.response.to.have.header('Content-Type')",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json')",
+                  "  pm.expect(pm.response.json().error).to.be.a('string').and.not.empty",
+                  "})"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
